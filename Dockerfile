@@ -1,16 +1,24 @@
-# Build stage
-FROM node:18-alpine AS builder
+# ---------- Build Stage ----------
+FROM node:18-alpine AS build
 
 WORKDIR /app
 
-# Copy package files
 COPY package.json bun.lockb ./
-
-# Install dependencies using bun
 RUN npm install -g bun && bun install
 
-# Copy source code
 COPY . .
-
-# Build the project
 RUN bun run build
+
+
+# ---------- Production Stage ----------
+FROM node:18-alpine
+
+WORKDIR /app
+
+RUN npm install -g serve
+
+COPY --from=build /app/dist ./dist
+
+EXPOSE 5173
+
+CMD ["sh", "-c", "serve -s dist -l $PORT"]
