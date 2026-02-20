@@ -684,3 +684,7 @@ VITE_DEBUG_MODE=true npm run dev
 **Project Support**: For issues, feature requests, or contributions, please open an issue on the repository.
 
 **Live Demo**: [https://gene-harmony.onrender.com/](https://gene-harmony.onrender.com/)
+
+**Team Members**
+- Aryan Sharma (Blockchain Developer)
+- Kavyansh Singh (Full Stack Developer)
