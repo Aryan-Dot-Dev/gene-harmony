@@ -1,0 +1,24 @@
+/**
+ * Example VCF File for Testing
+ * 
+ * Save this as `example.vcf` and upload through the frontend
+ * This is a minimal VCF 4.2 format file with sample variants
+ */
+
+##fileformat=VCFv4.2
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Read Depth">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">
+##FILTER=<ID=PASS,Description="All filters passed">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Genotype Quality">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE001
+10	94942278	rs1057910	C	T	60	PASS	DP=45;AF=0.5	GT:GQ:DP	0/1:60:45
+10	96702047	rs4086116	A	G	75	PASS	DP=52;AF=0.5	GT:GQ:DP	0/1:75:52
+2	233760498	rs1799853	C	T	85	PASS	DP=48;AF=0.48	GT:GQ:DP	0/1:85:48
+5	74612894	rs1801131	A	C	70	PASS	DP=40;AF=0.5	GT:GQ:DP	0/1:70:40
+
+# Notes:
+# - Replace SAMPLE001 with actual sample ID if desired
+# - The variant positions should correspond to real pharmacogenes
+# - Recommended genes for testing: CYP2D6, CYP2C9, CYP2C19, VKORC1, SLCO1B1, etc.

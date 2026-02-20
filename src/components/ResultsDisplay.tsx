@@ -1,5 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
+import { uploadVcf } from "@/lib/api";
+
+// Helper functions for mapping backend response to UI
+const mapRiskLevelToStatus = (riskLevel: string): "safe" | "warn" | "danger" => {
+  const lower = riskLevel.toLowerCase();
+  if (lower.includes("low") || lower.includes("safe")) return "safe";
+  if (lower.includes("moderate") || lower.includes("adjust")) return "warn";
+  if (lower.includes("high") || lower.includes("avoid")) return "danger";
+  return "warn";
+};
+
+const mapRiskLevelToDetail = (riskLevel: string): string => {
+  const lower = riskLevel.toLowerCase();
+  if (lower.includes("low") || lower.includes("safe")) return "safe therapeutic use";
+  if (lower.includes("moderate") || lower.includes("adjust")) return "need for dose adjustment or monitoring";
+  if (lower.includes("high") || lower.includes("avoid")) return "high risk of adverse effects";
+  return "potential drug interaction";
+};
 
 interface DrugResult {
   drug: string;
@@ -98,25 +116,58 @@ const STATUS_CONFIG = {
 interface ResultsDisplayProps {
   drugs: string[];
   hasFile: boolean;
+  file?: File | null;
+  wallet?: string;
 }
 
-export function ResultsDisplay({ drugs, hasFile }: ResultsDisplayProps) {
+export function ResultsDisplay({ drugs, hasFile, file, wallet }: ResultsDisplayProps) {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [apiResults, setApiResults] = useState<any>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  const filteredResults = MOCK_RESULTS.filter((r) => drugs.includes(r.drug));
-  const canAnalyze = drugs.length > 0 && hasFile;
+  const filteredResults = apiResults 
+    ? [{
+        drug: apiResults.drug || "Unknown",
+        gene: apiResults.gene || "Unknown",
+        phenotype: apiResults.phenotype || "Unknown",
+        status: mapRiskLevelToStatus(apiResults.riskLevel),
+        recommendation: apiResults.recommendation || "See CPIC guidelines",
+        dose: "See recommendation",
+        evidence: "CPIC Level A",
+        detail: `${apiResults.phenotype} indicates ${mapRiskLevelToDetail(apiResults.riskLevel)}. ${apiResults.recommendation}`
+      }]
+    : MOCK_RESULTS.filter((r) => drugs.includes(r.drug));
+  const canAnalyze = drugs.length > 0 && hasFile && !!wallet;
 
-  const runAnalysis = () => {
+  const runAnalysis = async () => {
+    if (!file || !drugs.length || !wallet) {
+      setApiError("Please upload a VCF file, select a drug, and enter wallet address");
+      return;
+    }
+
     setAnalyzing(true);
     setShowResults(false);
+    setApiError(null);
     setExpanded(null);
 
-    setTimeout(() => {
+    try {
+      // For multiple drugs, we'll use the first selected drug
+      // But ideally you'd want to analyze all drugs - that would require 
+      // either multiple API calls or backend support for batch analysis
+      const selectedDrug = drugs[0];
+
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Call the backend API
+      const data = await uploadVcf(file, wallet, selectedDrug);
+      
+      setApiResults(data);
       setAnalyzing(false);
       setShowResults(true);
 
@@ -131,7 +182,11 @@ export function ResultsDisplay({ drugs, hasFile }: ResultsDisplayProps) {
           }
         });
       }, 50);
-    }, 2000);
+    } catch (error) {
+      console.error("Analysis error:", error);
+      setAnalyzing(false);
+      setApiError(error instanceof Error ? error.message : "Failed to process VCF file");
+    }
   };
 
   const toggleExpand = (drug: string) => {
@@ -212,10 +267,31 @@ export function ResultsDisplay({ drugs, hasFile }: ResultsDisplayProps) {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-2" />
             </svg>
-            {canAnalyze ? "Run PGx Analysis" : drugs.length === 0 ? "Add medications first" : "Upload VCF file first"}
+            {canAnalyze 
+              ? "Run PGx Analysis" 
+              : drugs.length === 0 
+                ? "Add medications first" 
+                : !wallet
+                  ? "Enter wallet address first"
+                  : "Upload VCF file first"}
           </>
         )}
       </button>
+
+      {/* Error message */}
+      {apiError && (
+        <div className="pgx-card rounded-xl p-4 border border-danger/20 bg-danger/5 space-y-2">
+          <div className="flex items-start gap-3">
+            <svg className="w-4 h-4 text-danger-glow flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4v2m0 0a9 9 0 11-9-9a9 9 0 0 1 9 9z" />
+            </svg>
+            <div>
+              <div className="text-xs font-mono font-semibold text-danger-glow">Analysis Failed</div>
+              <p className="text-xs text-foreground/80 mt-1">{apiError}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Analyzing progress */}
       {analyzing && (

@@ -10,6 +10,7 @@ gsap.registerPlugin(ScrollTrigger);
 export function AnalysisPanel() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [selectedDrugs, setSelectedDrugs] = useState<string[]>([]);
+  const [walletAddress, setWalletAddress] = useState<string>("");
 
   useEffect(() => {
     gsap.fromTo(
@@ -69,6 +70,35 @@ export function AnalysisPanel() {
                 <FileUpload onFileAccepted={(f) => setUploadedFile(f)} />
                 <div className="border-t border-border/50" />
                 <DrugInput onDrugsChange={setSelectedDrugs} />
+                <div className="border-t border-border/50" />
+                
+                {/* Wallet Address Input */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center">
+                      <span className="text-primary text-sm font-mono font-bold">03</span>
+                    </div>
+                    <div>
+                      <h3 className="text-foreground font-semibold text-sm">Algorand Wallet</h3>
+                      <p className="text-muted-foreground text-xs font-mono">for blockchain verification</p>
+                    </div>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Enter Algorand wallet address (e.g., XXXXXX...)"
+                    value={walletAddress}
+                    onChange={(e) => setWalletAddress(e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg bg-muted/50 border border-border/50 text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all font-mono text-sm"
+                  />
+                  {walletAddress && (
+                    <div className="text-xs text-muted-foreground font-mono flex items-center gap-2 px-2 py-1.5 rounded bg-safe/5 border border-safe/20">
+                      <svg className="w-3 h-3 text-safe-glow flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Wallet address detected
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -108,7 +138,7 @@ export function AnalysisPanel() {
               </div>
             </div>
 
-            <ResultsDisplay drugs={selectedDrugs} hasFile={!!uploadedFile} />
+            <ResultsDisplay drugs={selectedDrugs} hasFile={!!uploadedFile} file={uploadedFile} wallet={walletAddress} />
 
             {/* Status bar */}
             <div className="mt-6 pt-4 border-t border-border/50 flex items-center justify-between text-xs font-mono text-muted-foreground">
