@@ -10,7 +10,7 @@
  * from the frontend origin. See SETUP_GUIDE.md for backend configuration.
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://spring-boot-algorand.onrender.com';
 
 export interface VcfUploadRequest {
   file: File;
